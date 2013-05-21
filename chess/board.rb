@@ -1,6 +1,9 @@
-require 'pieces.rb'
+require './pieces.rb'
+require './paths.rb'
 
 class Board
+  include Paths
+
   attr_reader :board
 
   def initialize
@@ -67,23 +70,28 @@ class Board
   end
 
   def print_board
-    @board.each {|row| p row}
+    @board.each do |row|
+      row.each do |col|
+        print "#{col} "
+      end
+      print "\n"
+    end
   end
 
-  def on_board?
+  def on_board?(end_square)
     end_square.all? {|coord| coord.between?(0, 7)} ? true : false
   end
 
-  def square_occupied?(color)
+  def square_occupied?(square, color)
     # pieces = color == "black" ? @black_pieces : @white_pieces
     @black_pieces.each do |piece|
-      if piece.pos == end_square
+      if piece.pos == square
         return :friendly if color == "black"
         return :enemy if color == "white"
       end
     end
     @white_pieces.each do |piece|
-      if piece.pos == end_square
+      if piece.pos == square
         return :friendly if color == "white"
         return :enemy if color == "black"
       end
@@ -91,63 +99,32 @@ class Board
     :unoccupied
   end
 
-  def legal_move?(piece, end_square, color)
-    piece.possible_moves.include?(end_square)
+  def legal_move?(piece, start_square, end_square, color)
+    piece.possible_moves(start_square).include?(end_square)
   end
 
-  def create_path(start, finish)
-    if start[1] == finish[1]
-      horizontal_path(start, finish)
-    elsif start[0] == finish[0]
-      vertical_path(start, finish)
-    else
-      diagonal_path(start, finish)
+  def check_move(start_square, end_square, color)
+    pieces = color == "black" ? @black_pieces : @white_pieces
+    piece = pieces.select do |x|
+      x.pos == start_square
+    end.last
+
+    return false unless legal_move?(piece, start_square, end_square, color)
+    return false unless on_board?(end_square)
+    return false if square_occupied?(end_square, color) == :friendly
+
+    path = create_path(start_square, end_square)
+    if path.count > 1
+      path.each do |square|
+        return false if square_occupied?(color) == :friendly
+        return false unless legal_move?(piece, end_square, color)
+      end
     end
+    true
   end
-
-  def horizontal_path(start, finish)
-    path = []
-    total_dx = finish[0] - start[0]
-    dx = total_dx / total_dx.abs
-    total_dx.abs.times do |i|
-      x_step = (i + 1) * dx
-      path << [start[0] + x_step, start[1]]
-    end
-    path
-  end
-
-  def vertical_path(start, finish)
-    path = []
-    total_dy = finish[1] - start[1]
-    dy = total_dy / total_dy.abs
-    total_dy.abs.times do |i|
-      y_step = (i + 1) * dy
-      path << [start[0], start[1] + y_step]
-    end
-    path
-  end
-
-  def diagonal_path(start, finish)
-    path = []
-    dx = (finish[0] - start[0]) / (finish[0] - start[0]).abs
-    dy = (finish[1] - start[1]) / (finish[1] - start[1]).abs
-    (finish[0] - start[0]).abs.times do |i|
-      path << [start[0] + (i + 1) * dx, start[1] + (i + 1) * dy]
-    end
-    path
-  end
-
-
-
-
-
-
-
-
-
-
 end
 
 board = Board.new
 board.update_board
-p board.create_path([4,0], [0, 4])
+p board.check_move([6,0], [4, 1], "black")
+board.print_board
