@@ -23,33 +23,36 @@ class Piece
 
 end
 
-
-
-# class Sliding_Piece < Piece
-#   until you hit some crap
-#     path << delta
-#
-#   end
-# end
-
-
 class Pawn < Piece
-  attr_reader :moved
+  attr_accessor :moved
   def initialize(pos, color)
     super(pos, color)
     @moved = false
     @sign = 'P'
+    p pos
   end
 
   def deltas
+    deltas = [[0, 1]]
+    deltas << [0, 2] unless @moved
+  end
 
+  def possible_moves(start_pos, color)
+    moves = []
+    if color == "black"
+      moves << super(start_pos)
+    else
+      x = start_pos[0]
+      y = start_pos[1]
+
+      moves << @deltas.map { |delta| [x - delta[0], y - delta[1]] }
+    end
 
 
   end
 
   alias_method :moved?, :moved
 end
-
 
 class Rook < Piece
   def initialize(pos, color)
@@ -79,6 +82,7 @@ class Bishop < Piece
   def deltas
     deltas = []
     8.times do |i|
+      next if i == 0
       deltas << [i, i]
       deltas << [i, -i]
       deltas << [-i, i]
@@ -97,6 +101,7 @@ class Queen < Piece
   def deltas
     deltas = []
     8.times do |i|
+      next if i == 0
       deltas << [i, i]
       deltas << [i, -i]
       deltas << [-i, i]

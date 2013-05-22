@@ -10,6 +10,7 @@ class Board
     generate_empty_board
     @black_pieces = generate_pieces("black")
     @white_pieces = generate_pieces("white")
+    update_board
   end
 
   def generate_empty_board
@@ -60,9 +61,9 @@ class Board
      pieces_coords << [piece.pos[0], piece.pos[1]]
     end
 
-    @board.each do |row|
-      row.each do |col|
-        col = '_' unless pieces_coords.include?(col)
+    8.times do |row|
+      8.times do |col|
+        @board[row][col] = '_' unless pieces_coords.include?([row, col])
       end
     end
 
@@ -70,6 +71,7 @@ class Board
   end
 
   def print_board
+    update_board
     @board.each do |row|
       row.each do |col|
         print "#{col} "
@@ -103,28 +105,70 @@ class Board
     piece.possible_moves(start_square).include?(end_square)
   end
 
-  def check_move(start_square, end_square, color)
+  def locate_piece_by_square(square, color)
     pieces = color == "black" ? @black_pieces : @white_pieces
     piece = pieces.select do |x|
-      x.pos == start_square
+      x.pos == square
     end.last
+  end
 
-    return false unless legal_move?(piece, start_square, end_square, color)
+  def pawn_capture_valid?(start, finish, color)
+    dx = finish[0] - start[0]
+    dy = finish[1] - start[1]
+    return true if dx == 0
+    if color == "black"
+      return false unless [[-1, 1], [1, 1]].include?([dx, dy])
+    else
+      return false unless [[-1, -1], [1, -1]].include?([dx, dy])
+    end
+
+    return false unless square_occupied?(finish, color) == :enemy
+
+    return true
+  end
+
+  def capture_piece(end_square, color)
+    enemy_color = color == "black" ? "white" : "black"
+    enemy_pieces = color == "black" ? @white_pieces : @black_pieces
+    captured_piece = locate_piece_by_square(end_square, enemy_color)
+    enemy_pieces.delete(captured_piece)
+  end
+
+  def check_move(start_square, end_square, color)
+    piece = locate_piece_by_square(start_square, color)
+    p piece
+    if piece.is_a?(Pawn)
+      p "Oh snap, a pawn!"
+      return false unless pawn_capture_valid?(start_square, end_square, color)
+      dy = end_square[1] - start_square[1]
+      p dy
+      return false if dy.abs > 2 || (dy.abs > 1 && piece.moved)
+    else
+      return false unless legal_move?(piece, start_square, end_square, color)
+    end
+
     return false unless on_board?(end_square)
     return false if square_occupied?(end_square, color) == :friendly
-
     path = create_path(start_square, end_square)
     if path.count > 1
       path.each do |square|
-        return false if square_occupied?(color) == :friendly
-        return false unless legal_move?(piece, end_square, color)
+        return false if square_occupied?(square, color) == :friendly
       end
     end
+
+    if square_occupied?(end_square, color) == :enemy
+      capture_piece(end_square, color)
+    end
+
     true
+  end
+
+  def execute_move(start, finish, color)
+    piece = locate_piece_by_square(start, color)
+    p piece.class
+    piece.pos = finish if check_move(start, finish, color)
+    piece.moved = true if piece.is_a?(Pawn)
   end
 end
 
-board = Board.new
-board.update_board
-p board.check_move([6,0], [4, 1], "black")
-board.print_board
+
