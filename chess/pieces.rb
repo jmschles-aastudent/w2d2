@@ -28,7 +28,7 @@ class Pawn < Piece
   def initialize(pos, color)
     super(pos, color)
     @moved = false
-    @sign = 'P'
+    @sign = color == "black" ? "\u265F" : "\u2659"
   end
 
   def deltas
@@ -48,7 +48,7 @@ end
 class Rook < Piece
   def initialize(pos, color)
     super(pos, color)
-    @sign = 'R'
+    @sign = color == "black" ? "\u265c" : "\u2656"
   end
 
   def deltas
@@ -67,7 +67,7 @@ end
 class Bishop < Piece
   def initialize(pos, color)
     super(pos, color)
-    @sign = 'B'
+    @sign = color == "black" ? "\u265d" : "\u2657"
   end
 
   def deltas
@@ -86,7 +86,7 @@ end
 class Queen < Piece
   def initialize(pos, color)
     super(pos, color)
-    @sign = 'Q'
+    @sign = color == "black" ? "\u265b" : "\u2655"
   end
 
   def deltas
@@ -109,7 +109,7 @@ end
 class King < Piece
   def initialize(pos, color)
     super(pos, color)
-    @sign = '$'
+    @sign = color == "black" ? "\u265a" : "\u2654"
   end
 
   def deltas
@@ -121,7 +121,7 @@ class Knight < Piece
 
   def initialize(pos, color)
     super(pos, color)
-    @sign = 'K'
+    @sign = color == "black" ? "\u265e" : "\u2658"
   end
 
   def deltas

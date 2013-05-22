@@ -1,5 +1,6 @@
 require './pieces.rb'
 require './paths.rb'
+require 'colorize'
 
 class Board
   include Paths
@@ -64,7 +65,7 @@ class Board
 
     8.times do |row|
       8.times do |col|
-        @board[row][col] = '_' unless pieces_coords.include?([row, col])
+        @board[row][col] = ' ' unless pieces_coords.include?([row, col])
       end
     end
 
@@ -73,10 +74,17 @@ class Board
 
   def print_board
     update_board
+    alternator = 0
     @board.transpose.each do |row|
       row.each do |col|
-        print "#{col} "
+        if alternator % 2 == 0
+          print ("#{col} ").colorize( :background => :red )
+        else
+          print ("#{col} ").colorize( :background => :blue )
+        end
+        alternator += 1
       end
+      alternator += 1
       print "\n"
     end
   end
