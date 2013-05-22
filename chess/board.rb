@@ -72,7 +72,7 @@ class Board
 
   def print_board
     update_board
-    @board.each do |row|
+    @board.transpose.each do |row|
       row.each do |col|
         print "#{col} "
       end

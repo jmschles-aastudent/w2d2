@@ -8,19 +8,16 @@ class Game
     @player2 = Player.new("black")
   end
 
-  # def parse_position(arr)
-  #   row = arr.first.ord - 97
-  #   col = arr.last.to_i - 1
-  #   [row, col]
-  # end
+  def parse_position(arr)
+    row = arr.first.ord - 97
+    col = 8 - arr.last.to_i
+    [row, col]
+  end
 
   def take_turn(player)
     move = player.get_move
-    start, finish = move[0], move[1]
-    p start
-    p finish
-    # move = player.get_move
-    # start, finish = parse_position(move[0]), parse_position(move[1])
+    start, finish = parse_position(move[0]), parse_position(move[1])
+    p start; p finish
     @board.execute_move(start, finish, player.color)
   end
 
@@ -54,12 +51,12 @@ class Player
 
   def get_start_pos
     puts "Enter the coordinates of the piece to move: "
-    gets.chomp.split("").map(&:to_i)
+    gets.chomp.split("")
   end
 
   def get_target_pos
     puts "Enter the target location: "
-    gets.chomp.split("").map(&:to_i)
+    gets.chomp.split("")
   end
 
 end
