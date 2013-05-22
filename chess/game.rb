@@ -1,6 +1,7 @@
 require "./board.rb"
 
 class Game
+  include Marshal
   attr_reader :board
   def initialize
     @board = Board.new
@@ -15,20 +16,38 @@ class Game
   end
 
   def take_turn(player)
+    @board.print_board
     move = player.get_move
     start, finish = parse_position(move[0]), parse_position(move[1])
-    p start; p finish
+
+    if @board.valid_move?(start, finish, player.color)
+
+      future_board = Marshal::load(Marshal.dump(@board))
+
+      future_board.execute_move(start, finish, player.color)
+      puts "This is FUTURE BOARD!"
+      future_board.print_board
+      other_color = player.color == "white" ? "black" : "white"
+      if future_board.check?(player.color)
+        puts "future board is in check"
+        take_turn(player)
+      end
+    else
+      take_turn(player)
+    end
+    puts "executing!"
     @board.execute_move(start, finish, player.color)
   end
 
   def run
     while true
-      @board.print_board
       take_turn(@player1)
-      @board.print_board
       take_turn(@player2)
     end
   end
+
+
+
 
 end
 

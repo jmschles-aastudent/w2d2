@@ -3,8 +3,9 @@ require './paths.rb'
 
 class Board
   include Paths
+  include Marshal
 
-  attr_reader :board
+  attr_reader :board, :black_pieces
 
   def initialize
     generate_empty_board
@@ -149,8 +150,11 @@ class Board
     return false if square_occupied?(end_square, color) == :friendly
     path = create_path(start_square, end_square)
     if path.count > 1
-      path.each do |square|
+      path.each_with_index do |square, i|
         return false if square_occupied?(square, color) == :friendly
+        unless i == path.count - 1
+          return false if square_occupied?(square, color) == :enemy
+        end
       end
     end
 
@@ -161,33 +165,61 @@ class Board
     enemy_color = color == "white" ? "black" : "white"
     piece = locate_piece_by_square(start, color)
 
-    if check?(enemy_color)
-      puts "Invalid move, you'd be in check"
-      return false
-    end
+    # if check?(enemy_color)
+#       puts "Invalid move, you'd be in check"
+#       return false
+#     end
 
     if square_occupied?(finish, color) == :enemy
       capture_piece(finish, color)
     end
 
-    piece.pos = finish if valid_move?(start, finish, color)
+    piece.pos = finish #if valid_move?(start, finish, color)
 
-    puts "Check!" if check?(color)
+    puts "Check!" if check?(enemy_color)
     piece.moved = true if piece.is_a?(Pawn)
+    true
   end
 
   def check?(color)
     friend_pieces = color == "black" ? @black_pieces : @white_pieces
     enemy_pieces = color == "white" ? @black_pieces : @white_pieces
-    king = enemy_pieces.select {|x| x.is_a?(King)}.last
+    king = friend_pieces.select {|x| x.is_a?(King)}.last
     puts "king position: #{king.pos}"
     puts "king is color: #{king.color}"
 
-    friend_pieces.each do |piece|
-      return true if valid_move?(piece.pos, king.pos, piece.color)
+    enemy_pieces.each do |piece|
+      if valid_move?(piece.pos, king.pos, piece.color)
+        puts "Bad news, you're in check"
+        return true
+      end
     end
     false
   end
+
+
 end
+
+
+
+class Object
+  def dup
+    copy = super
+    copy.make_independent!
+    copy
+  end
+
+  def make_independent!
+    instance_variables.each do |var|
+      value = instance_variable_get(var)
+
+      if (value.respond_to?(:dup))
+        instance_variable_set(var, value.dup)
+      end
+    end
+  end
+end
+
+
 
 
