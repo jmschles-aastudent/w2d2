@@ -16,26 +16,34 @@ class Game
   end
 
   def take_turn(player)
+    other_color = player.color == "black" ? "white" : "black"
     @board.print_board
+
+    puts "Check!" if @board.check?(other_color)
+
+    if @board.check?(player.color)
+      puts "Check!"
+      abort("check mate") if @board.mate?(player.color)
+    end
+
+    puts "#{player.name}'s turn"
+
     move = player.get_move
     start, finish = parse_position(move[0]), parse_position(move[1])
 
     if @board.valid_move?(start, finish, player.color)
-
       future_board = Marshal::load(Marshal.dump(@board))
 
       future_board.execute_move(start, finish, player.color)
-      puts "This is FUTURE BOARD!"
-      future_board.print_board
-      other_color = player.color == "white" ? "black" : "white"
+
       if future_board.check?(player.color)
-        puts "future board is in check"
         take_turn(player)
       end
     else
       take_turn(player)
+      return false
     end
-    puts "executing!"
+
     @board.execute_move(start, finish, player.color)
   end
 
@@ -54,7 +62,7 @@ end
 
 
 class Player
-  attr_reader :color
+  attr_reader :color, :name
 
   def initialize(color)
     puts "enter your name"

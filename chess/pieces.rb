@@ -29,26 +29,17 @@ class Pawn < Piece
     super(pos, color)
     @moved = false
     @sign = 'P'
-    p pos
   end
 
   def deltas
-    deltas = [[0, 1]]
-    deltas << [0, 2] unless @moved
-  end
-
-  def possible_moves(start_pos, color)
-    moves = []
-    if color == "black"
-      moves << super(start_pos)
+    if @color == "black"
+      deltas = [[0, 1], [1, 1], [-1, 1], [0, 2]]
+      deltas -= [[0, 2]] if @moved
     else
-      x = start_pos[0]
-      y = start_pos[1]
-
-      moves << @deltas.map { |delta| [x - delta[0], y - delta[1]] }
+      deltas = [[0, -1], [1, -1], [-1, -1], [0, -2]]
+      deltas -= [[0, -2]] if @moved
     end
-
-
+    deltas
   end
 
   alias_method :moved?, :moved

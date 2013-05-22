@@ -113,21 +113,6 @@ class Board
     end.last
   end
 
-  def pawn_capture_valid?(start, finish, color)
-    dx = finish[0] - start[0]
-    dy = finish[1] - start[1]
-    return true if dx == 0
-    if color == "black"
-      return false unless [[-1, 1], [1, 1]].include?([dx, dy])
-    else
-      return false unless [[-1, -1], [1, -1]].include?([dx, dy])
-    end
-
-    return false unless square_occupied?(finish, color) == :enemy
-
-    return true
-  end
-
   def capture_piece(end_square, color)
     enemy_color = color == "black" ? "white" : "black"
     enemy_pieces = color == "black" ? @white_pieces : @black_pieces
@@ -139,13 +124,17 @@ class Board
     piece = locate_piece_by_square(start_square, color)
 
     if piece.is_a?(Pawn)
-      return false unless pawn_capture_valid?(start_square, end_square, color)
+      dx = end_square[0] - start_square[0]
       dy = end_square[1] - start_square[1]
-      return false if dy.abs > 2 || (dy.abs > 1 && piece.moved)
-    else
-      return false unless legal_move?(piece, start_square, end_square, color)
+      if [dx.abs, dy.abs] == [1, 1]
+        return false unless square_occupied?(end_square, color) == :enemy
+      end
+      if (dx == 0 || dy == 0) && square_occupied?(end_square, color) == :enemy
+        return false
+      end
     end
 
+    return false unless legal_move?(piece, start_square, end_square, color)
     return false unless on_board?(end_square)
     return false if square_occupied?(end_square, color) == :friendly
     path = create_path(start_square, end_square)
@@ -164,19 +153,13 @@ class Board
   def execute_move(start, finish, color)
     enemy_color = color == "white" ? "black" : "white"
     piece = locate_piece_by_square(start, color)
-
-    # if check?(enemy_color)
-#       puts "Invalid move, you'd be in check"
-#       return false
-#     end
-
     if square_occupied?(finish, color) == :enemy
       capture_piece(finish, color)
     end
 
-    piece.pos = finish #if valid_move?(start, finish, color)
+    piece.pos = finish
 
-    puts "Check!" if check?(enemy_color)
+    #puts "Check!" if check?(enemy_color)
     piece.moved = true if piece.is_a?(Pawn)
     true
   end
@@ -185,41 +168,30 @@ class Board
     friend_pieces = color == "black" ? @black_pieces : @white_pieces
     enemy_pieces = color == "white" ? @black_pieces : @white_pieces
     king = friend_pieces.select {|x| x.is_a?(King)}.last
-    puts "king position: #{king.pos}"
-    puts "king is color: #{king.color}"
+
 
     enemy_pieces.each do |piece|
       if valid_move?(piece.pos, king.pos, piece.color)
-        puts "Bad news, you're in check"
         return true
       end
     end
     false
   end
 
+  def mate?(color)
+    pieces = color == "black" ? @black_pieces : @white_pieces
+    pieces.each do |piece|
 
-end
-
-
-
-class Object
-  def dup
-    copy = super
-    copy.make_independent!
-    copy
-  end
-
-  def make_independent!
-    instance_variables.each do |var|
-      value = instance_variable_get(var)
-
-      if (value.respond_to?(:dup))
-        instance_variable_set(var, value.dup)
+      piece.possible_moves(piece.pos).each do |move|
+        next unless valid_move?(piece.pos, move, color)
+        future_board = Marshal::load(Marshal.dump(self))
+        future_board.execute_move(piece.pos, move, color)
+        return false if !future_board.check?(color)
       end
     end
+    true
   end
+
+
 end
-
-
-
 
