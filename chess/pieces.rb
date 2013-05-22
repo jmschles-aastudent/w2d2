@@ -2,7 +2,7 @@
 
 class Piece
   attr_accessor :pos
-  attr_reader :sign
+  attr_reader :sign, :color
 
   def initialize(pos, color)
     @pos, @color, = pos, color

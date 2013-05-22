@@ -134,14 +134,12 @@ class Board
     enemy_pieces.delete(captured_piece)
   end
 
-  def check_move(start_square, end_square, color)
+  def valid_move?(start_square, end_square, color)
     piece = locate_piece_by_square(start_square, color)
-    p piece
+
     if piece.is_a?(Pawn)
-      p "Oh snap, a pawn!"
       return false unless pawn_capture_valid?(start_square, end_square, color)
       dy = end_square[1] - start_square[1]
-      p dy
       return false if dy.abs > 2 || (dy.abs > 1 && piece.moved)
     else
       return false unless legal_move?(piece, start_square, end_square, color)
@@ -156,18 +154,39 @@ class Board
       end
     end
 
-    if square_occupied?(end_square, color) == :enemy
-      capture_piece(end_square, color)
-    end
-
     true
   end
 
   def execute_move(start, finish, color)
+    enemy_color = color == "white" ? "black" : "white"
     piece = locate_piece_by_square(start, color)
-    p piece.class
-    piece.pos = finish if check_move(start, finish, color)
+
+    if check?(enemy_color)
+      puts "Invalid move, you'd be in check"
+      return false
+    end
+
+    if square_occupied?(finish, color) == :enemy
+      capture_piece(finish, color)
+    end
+
+    piece.pos = finish if valid_move?(start, finish, color)
+
+    puts "Check!" if check?(color)
     piece.moved = true if piece.is_a?(Pawn)
+  end
+
+  def check?(color)
+    friend_pieces = color == "black" ? @black_pieces : @white_pieces
+    enemy_pieces = color == "white" ? @black_pieces : @white_pieces
+    king = enemy_pieces.select {|x| x.is_a?(King)}.last
+    puts "king position: #{king.pos}"
+    puts "king is color: #{king.color}"
+
+    friend_pieces.each do |piece|
+      return true if valid_move?(piece.pos, king.pos, piece.color)
+    end
+    false
   end
 end
 
