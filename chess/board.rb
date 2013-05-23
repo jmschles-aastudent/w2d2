@@ -168,7 +168,9 @@ class Board
     piece.pos = finish
 
     #puts "Check!" if check?(enemy_color)
-    piece.moved = true if piece.is_a?(Pawn)
+    if piece.is_a?(Pawn)
+      piece.deltas -= piece.color == "black" ? [[0, 2]] : [[0, -2]]
+    end
     true
   end
 

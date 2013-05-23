@@ -1,7 +1,7 @@
 # require 'board.rb'
 
 class Piece
-  attr_accessor :pos
+  attr_accessor :pos, :deltas
   attr_reader :sign, :color
 
   def initialize(pos, color)
@@ -35,9 +35,11 @@ class Pawn < Piece
     if @color == "black"
       deltas = [[0, 1], [1, 1], [-1, 1], [0, 2]]
       deltas -= [[0, 2]] if @moved
+      p deltas
     else
       deltas = [[0, -1], [1, -1], [-1, -1], [0, -2]]
       deltas -= [[0, -2]] if @moved
+      p deltas
     end
     deltas
   end
