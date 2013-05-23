@@ -9,12 +9,6 @@ class Game
     @player2 = Player.new("black")
   end
 
-  def parse_position(arr)
-    row = arr.first.ord - 97
-    col = 8 - arr.last.to_i
-    [row, col]
-  end
-
   def take_turn(player)
     other_color = player.color == "black" ? "white" : "black"
     @board.print_board
@@ -26,10 +20,9 @@ class Game
       abort("check mate") if @board.mate?(player.color)
     end
 
-    puts "#{player.name}'s turn"
+    puts "#{player.name}'s turn (#{player.color})!"
 
-    move = player.get_move
-    start, finish = parse_position(move[0]), parse_position(move[1])
+    start, finish = player.get_move
 
     if @board.valid_move?(start, finish, player.color)
       future_board = Marshal::load(Marshal.dump(@board))
@@ -71,8 +64,8 @@ class Player
   end
 
   def get_move
-    start = get_start_pos
-    target = get_target_pos
+    start = parse_position(get_start_pos)
+    target = parse_position(get_target_pos)
     [start, target]
   end
 
@@ -84,6 +77,12 @@ class Player
   def get_target_pos
     puts "Enter the target location: "
     gets.chomp.split("")
+  end
+
+  def parse_position(arr)
+    row = arr.first.ord - 97
+    col = 8 - arr.last.to_i
+    [row, col]
   end
 
 end

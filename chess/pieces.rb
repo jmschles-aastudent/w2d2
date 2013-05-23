@@ -24,27 +24,19 @@ class Piece
 end
 
 class Pawn < Piece
-  attr_accessor :moved
   def initialize(pos, color)
     super(pos, color)
-    @moved = false
     @sign = color == "black" ? "\u265F" : "\u2659"
   end
 
   def deltas
     if @color == "black"
       deltas = [[0, 1], [1, 1], [-1, 1], [0, 2]]
-      deltas -= [[0, 2]] if @moved
-      p deltas
     else
       deltas = [[0, -1], [1, -1], [-1, -1], [0, -2]]
-      deltas -= [[0, -2]] if @moved
-      p deltas
     end
     deltas
   end
-
-  alias_method :moved?, :moved
 end
 
 class Rook < Piece
