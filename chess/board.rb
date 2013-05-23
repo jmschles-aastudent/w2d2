@@ -50,19 +50,18 @@ class Board
     pieces << King.new([4, row1], color)
   end
 
-  def update_board
+  def get_positions(color)
     pieces_coords = []
-
-    @white_pieces.each do |piece|
+    pieces = color == "black" ? @black_pieces : @white_pieces
+    pieces.each do |piece|
       @board[piece.pos[0]][piece.pos[1]] = piece.sign
       pieces_coords << [piece.pos[0], piece.pos[1]]
     end
+    pieces_coords
+  end
 
-    @black_pieces.each do |piece|
-      @board[piece.pos[0]][piece.pos[1]] = piece.sign
-     pieces_coords << [piece.pos[0], piece.pos[1]]
-    end
-
+  def update_board
+    pieces_coords = get_positions("black") + get_positions("white")
     8.times do |row|
       8.times do |col|
         @board[row][col] = ' ' unless pieces_coords.include?([row, col])
@@ -94,7 +93,6 @@ class Board
   end
 
   def square_occupied?(square, color)
-    # pieces = color == "black" ? @black_pieces : @white_pieces
     @black_pieces.each do |piece|
       if piece.pos == square
         return :friendly if color == "black"
@@ -107,6 +105,7 @@ class Board
         return :enemy if color == "black"
       end
     end
+
     :unoccupied
   end
 
@@ -128,23 +127,7 @@ class Board
     enemy_pieces.delete(captured_piece)
   end
 
-  def valid_move?(start_square, end_square, color)
-    piece = locate_piece_by_square(start_square, color)
-
-    if piece.is_a?(Pawn)
-      dx = end_square[0] - start_square[0]
-      dy = end_square[1] - start_square[1]
-      if [dx.abs, dy.abs] == [1, 1]
-        return false unless square_occupied?(end_square, color) == :enemy
-      end
-      if (dx == 0 || dy == 0) && square_occupied?(end_square, color) == :enemy
-        return false
-      end
-    end
-
-    return false unless legal_move?(piece, start_square, end_square, color)
-    return false unless on_board?(end_square)
-    return false if square_occupied?(end_square, color) == :friendly
+  def check_path(start_square, end_square, color)
     path = create_path(start_square, end_square)
     if path.count > 1
       path.each_with_index do |square, i|
@@ -154,6 +137,33 @@ class Board
         end
       end
     end
+    true
+  end
+
+  def valid_pawn_move?(start_square, end_square, color)
+    dx = end_square[0] - start_square[0]
+    dy = end_square[1] - start_square[1]
+    if [dx.abs, dy.abs] == [1, 1]
+      return false unless square_occupied?(end_square, color) == :enemy
+    end
+    if (dx == 0 || dy == 0) && square_occupied?(end_square, color) == :enemy
+      return false
+    end
+    true
+  end
+
+
+  def valid_move?(start_square, end_square, color)
+    piece = locate_piece_by_square(start_square, color)
+
+    if piece.is_a?(Pawn)
+      return false unless valid_pawn_move?(start_square, end_square, color)
+    end
+
+    return false unless legal_move?(piece, start_square, end_square, color)
+    return false unless on_board?(end_square)
+    return false if square_occupied?(end_square, color) == :friendly
+    return false unless check_path(start_square, end_square, color)
 
     true
   end
@@ -167,7 +177,6 @@ class Board
 
     piece.pos = finish
 
-    #puts "Check!" if check?(enemy_color)
     if piece.is_a?(Pawn)
       piece.deltas -= piece.color == "black" ? [[0, 2]] : [[0, -2]]
     end
@@ -191,7 +200,6 @@ class Board
   def mate?(color)
     pieces = color == "black" ? @black_pieces : @white_pieces
     pieces.each do |piece|
-
       piece.possible_moves(piece.pos).each do |move|
         next unless valid_move?(piece.pos, move, color)
         future_board = Marshal::load(Marshal.dump(self))
@@ -201,7 +209,5 @@ class Board
     end
     true
   end
-
-
 end
 

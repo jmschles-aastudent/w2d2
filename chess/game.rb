@@ -24,6 +24,12 @@ class Game
 
     start, finish = player.get_move
 
+    unless valid_start_pos?(player, start)
+      puts "You don't have a piece there."
+      take_turn(player)
+      return false
+    end
+
     if @board.valid_move?(start, finish, player.color)
       future_board = Marshal::load(Marshal.dump(@board))
 
@@ -47,8 +53,13 @@ class Game
     end
   end
 
-
-
+  def valid_start_pos?(player, pos)
+    return false if @board.locate_piece_by_square(pos, player.color) == nil
+    if @board.locate_piece_by_square(pos, player.color).color != player.color
+      return false
+    end
+    true
+  end
 
 end
 
